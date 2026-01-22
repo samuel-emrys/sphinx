@@ -65,6 +65,11 @@ def reference_check(app, *args, **kwds):
 def set_config(app, mapping):
     # copy *mapping* so that normalization does not alter it
     app.config.intersphinx_mapping = mapping.copy()
+    app.config.intersphinx_request_headers = {
+        'python': {
+            'Authorization': 'Bearer abcde',
+        }
+    }
     app.config.intersphinx_cache_limit = 0
     app.config.intersphinx_disabled_reftypes = []
 
@@ -80,6 +85,7 @@ def test_fetch_inventory_redirection(_read_from_url, InventoryFile, app):  # NoQ
     _read_from_url().url = 'https://hostname/' + INVENTORY_FILENAME
     _fetch_inventory(
         target_uri='https://hostname/',
+        headers={},
         inv_location='https://hostname/' + INVENTORY_FILENAME,
         config=app.config,
         srcdir=app.srcdir,
@@ -94,6 +100,7 @@ def test_fetch_inventory_redirection(_read_from_url, InventoryFile, app):  # NoQ
 
     _fetch_inventory(
         target_uri='https://hostname/',
+        headers={},
         inv_location='https://hostname/' + INVENTORY_FILENAME,
         config=app.config,
         srcdir=app.srcdir,
@@ -112,6 +119,7 @@ def test_fetch_inventory_redirection(_read_from_url, InventoryFile, app):  # NoQ
 
     _fetch_inventory(
         target_uri='https://hostname/',
+        headers={},
         inv_location='https://hostname/new/' + INVENTORY_FILENAME,
         config=app.config,
         srcdir=app.srcdir,
@@ -126,6 +134,7 @@ def test_fetch_inventory_redirection(_read_from_url, InventoryFile, app):  # NoQ
 
     _fetch_inventory(
         target_uri='https://hostname/',
+        headers={},
         inv_location='https://hostname/new/' + INVENTORY_FILENAME,
         config=app.config,
         srcdir=app.srcdir,
@@ -779,7 +788,9 @@ def test_intersphinx_cache_limit(app, monkeypatch, cache_limit, expected_expired
     )
 
     for name, (uri, locations) in app.config.intersphinx_mapping.values():
-        project = _IntersphinxProject(name=name, target_uri=uri, locations=locations)
+        project = _IntersphinxProject(
+            name=name, target_uri=uri, headers={}, locations=locations
+        )
         updated = _fetch_inventory_group(
             project=project,
             cache=intersphinx_cache,
@@ -812,6 +823,7 @@ def test_intersphinx_fetch_inventory_group_url():
     with http_server(InventoryHandler) as server:
         url1 = f'http://localhost:{server.server_port}'
         url2 = f'http://localhost:{server.server_port}/'
+        headers = {'Authorization': 'Bearer abcde'}
 
         config = Config()
         config.intersphinx_cache_limit = -1
@@ -828,7 +840,7 @@ def test_intersphinx_fetch_inventory_group_url():
         side_effect = ValueError('')
 
         project1 = _IntersphinxProject(
-            name='1', target_uri=url1, locations=(url1, None)
+            name='1', target_uri=url1, headers=headers, locations=(url1, None)
         )
         with mock.patch(
             'sphinx.ext.intersphinx._load._fetch_inventory', side_effect=side_effect
@@ -836,19 +848,21 @@ def test_intersphinx_fetch_inventory_group_url():
             assert not _fetch_inventory_group(project=project1, **kwds)
         mockfn.assert_any_call(
             target_uri=url1,
+            headers=headers,
             inv_location=url1,
             config=config,
             srcdir=None,
         )
         mockfn.assert_any_call(
             target_uri=url1,
+            headers=headers,
             inv_location=url1 + '/' + INVENTORY_FILENAME,
             config=config,
             srcdir=None,
         )
 
         project2 = _IntersphinxProject(
-            name='2', target_uri=url2, locations=(url2, None)
+            name='2', target_uri=url2, headers=headers, locations=(url2, None)
         )
         with mock.patch(
             'sphinx.ext.intersphinx._load._fetch_inventory', side_effect=side_effect
@@ -856,12 +870,14 @@ def test_intersphinx_fetch_inventory_group_url():
             assert not _fetch_inventory_group(project=project2, **kwds)
         mockfn.assert_any_call(
             target_uri=url2,
+            headers=headers,
             inv_location=url2,
             config=config,
             srcdir=None,
         )
         mockfn.assert_any_call(
             target_uri=url2,
+            headers=headers,
             inv_location=url2 + INVENTORY_FILENAME,
             config=config,
             srcdir=None,

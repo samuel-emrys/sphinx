@@ -111,6 +111,9 @@ Features added
 * #12949: Print configuration options that differ from the pickled environment.
   This can be helpful in diagnosing the cause of a full rebuild.
   Patch by Adam Turner.
+* Add :confval:`intersphinx_request_headers` to allow custom HTTP headers to
+  be set when resolving objects.inv on remote hosts. In particular, this
+  enables Bearer authorization to allow access to private GitLab pages.
 
 Bugs fixed
 ----------

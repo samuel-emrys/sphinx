@@ -27,6 +27,7 @@ def inspect_main(argv: list[str], /) -> int:
         filename = argv[0]
         inv_data = _fetch_inventory(
             target_uri='',
+            headers={},
             inv_location=filename,
             config=MockConfig(),  # type: ignore[arg-type]
             srcdir='',  # type: ignore[arg-type]

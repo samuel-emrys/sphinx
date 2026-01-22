@@ -76,6 +76,7 @@ Contributors
 * Rob Ruana -- napoleon extension
 * Robert Lehmann -- gettext builder (GSOC project)
 * Roland Meister -- epub builder
+* Samuel Dowling -- Intersphinx request header support
 * Sebastian Wiesner -- image handling, distutils support
 * Stefan Seefeld -- toctree improvements
 * Stefan van der Walt -- autosummary extension

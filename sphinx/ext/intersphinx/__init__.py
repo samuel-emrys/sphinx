@@ -64,6 +64,7 @@ if TYPE_CHECKING:
 
 def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_config_value('intersphinx_mapping', {}, 'env')
+    app.add_config_value('intersphinx_request_headers', {}, 'env')
     app.add_config_value('intersphinx_cache_limit', 5, '')
     app.add_config_value('intersphinx_timeout', None, '')
     app.add_config_value('intersphinx_disabled_reftypes', ['std:doc'], 'env')

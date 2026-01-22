@@ -44,6 +44,7 @@ LOGGER: Final[logging.SphinxLoggerAdapter] = logging.getLogger('sphinx.ext.inter
 class _IntersphinxProject:
     name: InventoryName
     target_uri: InventoryURI
+    headers: dict[str, str]
     locations: tuple[InventoryLocation, ...]
 
     __slots__ = {
@@ -51,6 +52,7 @@ class _IntersphinxProject:
                       'It is unique and in bijection with an remote inventory URL.',
         'target_uri': 'The inventory project URL to which links are resolved. '
                       'It is unique and in bijection with an inventory name.',
+        'headers':    'The headers to use in the HTTP request',
         'locations':  'A tuple of local or remote targets containing '
                       'the inventory data to fetch. '
                       'None indicates the default inventory file name.',
@@ -61,6 +63,7 @@ class _IntersphinxProject:
         *,
         name: InventoryName,
         target_uri: InventoryURI,
+        headers: dict[str, str],
         locations: Sequence[InventoryLocation],
     ) -> None:
         if not name or not isinstance(name, str):
@@ -80,6 +83,7 @@ class _IntersphinxProject:
             raise ValueError(msg)
         object.__setattr__(self, 'name', name)
         object.__setattr__(self, 'target_uri', target_uri)
+        object.__setattr__(self, 'headers', headers)
         object.__setattr__(self, 'locations', tuple(locations))
 
     def __repr__(self) -> str:
@@ -87,6 +91,7 @@ class _IntersphinxProject:
             f'{self.__class__.__name__}('
             f'name={self.name!r}, '
             f'target_uri={self.target_uri!r}, '
+            f'headers={self.headers!r}, '
             f'locations={self.locations!r})'
         )
 

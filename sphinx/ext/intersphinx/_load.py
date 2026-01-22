@@ -144,12 +144,18 @@ def load_mappings(app: Sphinx) -> None:
     inventories = InventoryAdapter(app.builder.env)
     intersphinx_cache: dict[InventoryURI, InventoryCacheEntry] = inventories.cache
     intersphinx_mapping: IntersphinxMapping = app.config.intersphinx_mapping
+    intersphinx_request_headers: dict[str, dict[str, str]] = (
+        app.config.intersphinx_request_headers
+    )
 
     projects = []
     for name, (uri, locations) in intersphinx_mapping.values():
         try:
             project = _IntersphinxProject(
-                name=name, target_uri=uri, locations=locations
+                name=name,
+                target_uri=uri,
+                headers=intersphinx_request_headers.get(name, {}),
+                locations=locations,
             )
         except ValueError as err:
             msg = __(
@@ -245,6 +251,7 @@ def _fetch_inventory_group(
             try:
                 invdata = _fetch_inventory(
                     target_uri=project.target_uri,
+                    headers=project.headers,
                     inv_location=inv,
                     config=config,
                     srcdir=srcdir,
@@ -279,10 +286,13 @@ def _fetch_inventory_group(
     return updated
 
 
-def fetch_inventory(app: Sphinx, uri: InventoryURI, inv: str) -> Inventory:
+def fetch_inventory(
+    app: Sphinx, uri: InventoryURI, headers: dict[str, str], inv: str
+) -> Inventory:
     """Fetch, parse and return an intersphinx inventory file."""
     return _fetch_inventory(
         target_uri=uri,
+        headers=headers,
         inv_location=inv,
         config=app.config,
         srcdir=app.srcdir,
@@ -290,7 +300,7 @@ def fetch_inventory(app: Sphinx, uri: InventoryURI, inv: str) -> Inventory:
 
 
 def _fetch_inventory(
-    *, target_uri: InventoryURI, inv_location: str, config: Config, srcdir: Path
+    *, target_uri: InventoryURI, headers: dict[str, str], inv_location: str, config: Config, srcdir: Path
 ) -> Inventory:
     """Fetch, parse and return an intersphinx inventory file."""
     # both *target_uri* (base URI of the links to generate)
@@ -301,7 +311,7 @@ def _fetch_inventory(
         target_uri = _strip_basic_auth(target_uri)
     try:
         if '://' in inv_location:
-            f: _ReadableStream[bytes] = _read_from_url(inv_location, config=config)
+            f: _ReadableStream[bytes] = _read_from_url(inv_location, headers=headers, config=config)
         else:
             f = open(path.join(srcdir, inv_location), 'rb')  # NoQA: SIM115
     except Exception as err:
@@ -389,7 +399,7 @@ def _strip_basic_auth(url: str) -> str:
     return urlunsplit(frags)
 
 
-def _read_from_url(url: str, *, config: Config) -> HTTPResponse:
+def _read_from_url(url: str, headers: dict[str, str], *, config: Config) -> HTTPResponse:
     """Reads data from *url* with an HTTP *GET*.
 
     This function supports fetching from resources which use basic HTTP auth as
@@ -407,6 +417,7 @@ def _read_from_url(url: str, *, config: Config) -> HTTPResponse:
     """
     r = requests.get(
         url,
+        headers=headers,
         stream=True,
         timeout=config.intersphinx_timeout,
         _user_agent=config.user_agent,
